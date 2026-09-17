@@ -30,6 +30,8 @@ code runs on recorded `.iq` files and then live.
   wedge-map fix within ~800 m.
 * Carrier offset up to ±300 kHz and 2 kHz/s drift: no bearing bias (the
   discriminator turns frequency error into DC, which the lock-in rejects).
+* Full sweeps over SNR, burst length, plate spacing and sample rate, with
+  the physics behind each failure mode: [sweeps/README.md](sweeps/README.md).
 
 ## Two things learned that change the build
 

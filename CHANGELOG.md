@@ -25,6 +25,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- `tools/sweep.py`: bearing-error sweeps over SNR, burst length, plate
+  spacing and sample rate (2 vs 8 MSPS at matched transmitter power), with
+  plots and a plain-language write-up in `docs/sweeps/`. `matplotlib` is an
+  optional dependency (`pip install -e .[sweep]`); `tests/test_sweep.py`
+  runs a tiny version so the tool can't rot.
 - `docs/hardware-day-checklist.md`: ordered commands to prove the Opera Cake
   is switching on a HackRF Pro before trusting a bearing.
 
