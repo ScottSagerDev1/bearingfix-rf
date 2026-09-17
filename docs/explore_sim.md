@@ -7,10 +7,13 @@ It uses the real code — the same `estimate_bearing()` the product uses — so 
 Run it from the repo root:
 
 ```
+git clone https://github.com/ScottSagerDev1/bearingfix-rf
+cd bearingfix-rf
+pip install -e .
 python explore_sim.py
 ```
 
-It takes about three seconds and needs nothing beyond what `pip install -e .` already installed.
+It takes about three seconds and needs nothing beyond what `pip install -e .` already installed. Would rather read than install? A full example run at the default settings: [explore_sim_sample_output.txt](explore_sim_sample_output.txt).
 
 ## The knobs
 

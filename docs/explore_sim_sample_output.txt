@@ -1,0 +1,38 @@
+plate 3.5 in = 0.25 wavelengths at 830 MHz; dwell 62.5 samples per element, 32000 switch edges/s
+
+1. raw I/Q: 40000 samples, first three = [ 0.128+1.284j  0.582+0.711j -0.1  +0.254j]
+   mean power 1.509 (signal + noise; the phone alone would be 0.67 of that)
+
+2. carrier found at +58.8 kHz (sim put it at +37.0 kHz)
+   raw spectrum, dB relative to the carrier bin (buried: source is 180 kHz wide):  -2f_rot  -6.5  -1f_rot -11.8  +1f_rot -13.9  +2f_rot  -5.9
+   discriminator lock-in at f_rot: 0.0094, off-frequency floor 0.0028 -> 10.4 dB above the floor
+
+3. 639 switch edges. Average step -11.5 deg = leftover frequency error, removed. Reads as -16.0 kHz; truly -21.8 kHz.
+   Phase of each antenna relative to antenna 0 (degrees); filter smear scales them by ~0.65:
+   antenna 0 at compass  45:  measured    +0.0   geometry says    +0.0
+   antenna 1 at compass 135:  measured   +40.7   geometry says   +64.8
+   antenna 2 at compass 225:  measured    +1.0   geometry says    +4.4
+   antenna 3 at compass 315:  measured   -41.0   geometry says   -60.4
+   (loop closes: step back into antenna 0 = +36.0, should be +41.0)
+
+4. L = 0.2365-0.2790j  angle -49.7  ->  bearing 139.7 by hand, 139.7 from estimate_bearing()
+   error +2.7 deg, sigma 9.2 (spread across 8 sub-blocks), ok=True
+
+5. 20 bursts of 1.0 ms, per-burst errors: +23 -20 +4 +10 +94 -11 +4 -2 +3 -43 +31 +62 -76 -42 +0 -19 +7 +7 -25 +24
+   mean |error| per burst 25.4  ->  fused 126.9 +- 28.2, error -10.1 deg from 12 pings
+
+6. stop  true rel. bearing  measured
+      0      330.4           325.5 +- 24.4
+      1      327.9           321.8 +- 20.5
+      2      325.0           335.0 +- 20.3
+      3      321.7           313.0 +- 16.6
+      4      317.7           308.6 +- 15.1
+      5      313.1           319.0 +- 18.3
+      6      307.6           296.3 +- 13.7
+      7      301.2           304.5 +- 21.8
+      8      293.7           298.5 +- 44.7
+      9      285.4           296.3 +- 20.6
+     10      276.3           270.1 +- 38.8
+     11      266.9           261.3 +- 20.4
+
+   FIX 39.7342, -84.1001: 1578 m from the phone, 50% spread 5063 m, from 12 wedges

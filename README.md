@@ -35,11 +35,14 @@ Simulator built and tested, no hardware in hand yet. Range, accuracy, and whethe
 No hardware needed. [explore_sim.py](explore_sim.py) puts one imaginary phone at a bearing you choose and narrates every stage of the pipeline as it finds it — raw I/Q, the switching tone, the phase at each antenna, the bearing, fusion, the map. Five knobs at the top, three seconds to run:
 
 ```
+git clone https://github.com/ScottSagerDev1/bearingfix-rf
+cd bearingfix-rf
 pip install -e .
 python explore_sim.py
 ```
 
 What each stage means and what to try: [docs/explore_sim.md](docs/explore_sim.md).
+Would rather read than install? A full example run: [docs/explore_sim_sample_output.txt](docs/explore_sim_sample_output.txt).
 
 ## Technical details
 
