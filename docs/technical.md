@@ -15,7 +15,7 @@ code runs on recorded `.iq` files and then live.
 | `burst.py` | energy burst detector + per-burst bearing | done, tested |
 | `tracker.py` | fuse sparse pings; strength bar + high-water mark; approaching/receding + left/right trend with a significance test | done, tested |
 | `geo.py` | wedge map: pings from a moving platform accumulate on a grid, peak = fix | done, tested |
-| `hackrf_io.py` | read/write hackrf_transfer files, capture, Opera Cake time-mode setup | **flags unverified until hardware** |
+| `hackrf_io.py` | read/write hackrf_transfer files, capture, Opera Cake time-mode setup | flags verified against 2026.01.3 host-tools source; **switch timing and Pro behaviour unverified until hardware** |
 | `cli.py` | `sim`, `file`, `calibrate`, `drive` commands | done |
 | `tests/` | 32 pytest cases | passing |
 
@@ -57,24 +57,11 @@ python -m bearing_df.cli drive
 
 ## Hardware day checklist (when HackRF Pro + Opera Cake are in hand)
 
-1. `hackrf_info`, then `hackrf_operacake -h` and `hackrf_transfer -h`.
-   Fix the flag names in `hackrf_io.py` — they are marked UNVERIFIED.
-2. Pick an integer dwell: at 2 MSPS, dwell 62 → f_rot = 2e6/(4·62) =
-   8064.5 Hz. Pass that exact f_rot to `DFConfig`.
-3. Put your phone on a continuous call ~100 ft away at a known bearing,
-   record 1 s: `hackrf_transfer -r cal.iq -f 830000000 -s 2000000 -n 2000000 …`
-   (find the actual uplink frequency first in GQRX with the switch parked).
-4. `python -m bearing_df.cli file cal.iq --frot 8064.5` — look at `snr` and
-   `sigma`. If sigma is huge, try `--recover-timing`.
-5. Record three separate captures. If `switch_start` / raw angle is the same
-   each time, the Opera Cake counter restarts with the stream and you can
-   use a fixed `switch_start_sample`. If not, always `--recover-timing` and
-   live with the 90° ambiguity until calibrated.
-6. `python -m bearing_df.cli calibrate cal.iq --true-bearing <deg> --frot 8064.5`
-   → `calibration.json`. If bearings come out mirrored as you walk around
-   the plate, the ports are wired counter-clockwise: rerun with
-   `--rotation-dir -1`.
-7. Then: `file capture.iq --burst --cal calibration.json` on a no-bars phone.
+See [hardware-day-checklist.md](hardware-day-checklist.md): the exact
+commands, in order, to confirm the Opera Cake is switching on the Pro
+before trusting any bearing. The firmware clears the switch counter every
+time a transfer stops, so `switch_start_sample` should be a fixed constant;
+step 8 there is the test that settles it.
 
 ## Known gaps (deliberately not built yet)
 

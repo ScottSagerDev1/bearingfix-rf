@@ -4,3 +4,4 @@ __pycache__/
 *.iq
 *.egg-info/
 CLAUDE.md
+.vscode/
