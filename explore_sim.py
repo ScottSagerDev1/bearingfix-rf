@@ -19,6 +19,7 @@ SNR_DB = 3.0               # phone power vs noise in the 2 MHz capture; sweeps s
 BURST_MS = 1.0             # how long each transmission lasts; 1 ms = one LTE subframe, try 0.4 or 2.0
 SPACING_IN = 3.5           # plate side in inches; cellular_plate() is 3.5. Try 2.0 (weak) or 6.5 (ambiguous, ~lambda/2)
 SOURCE = "wideband"        # "wideband" = noise-like LTE stand-in (realistic); "tone" = clean carrier (ideal)
+SEED = 0                   # random seed for the noise; change it to see a different draw of the same setup, keep it to make runs repeatable
 # ----------------------------------------------------------------------------
 
 FREQ_HZ, FS, F_ROT = 830e6, 2e6, 8000.0
@@ -34,7 +35,7 @@ print(f"plate {SPACING_IN} in = {arr.spacing_m / wavelength(FREQ_HZ):.2f} wavele
 # selected at that instant. The bearing is hiding in how that phase jumps at
 # each switch.
 sc = SimConfig(fs=FS, f_rot=F_ROT, freq_hz=FREQ_HZ, bearing_deg=TRUE_BEARING_DEG,
-               snr_db=SNR_DB, source=SOURCE, duration_s=0.02, seed=0)
+               snr_db=SNR_DB, source=SOURCE, duration_s=0.02, seed=SEED)
 iq, _ = simulate(sc, arr)
 print(f"1. raw I/Q: {len(iq)} samples, first three = {np.round(iq[:3], 3)}")
 print(f"   mean power {np.mean(np.abs(iq)**2):.3f} (signal + noise; the phone alone would be"
@@ -141,7 +142,7 @@ print("6. stop  true rel. bearing  measured")
 for i in range(12):
     lat, lon, hdg = 39.65, -84.26 + 0.015 * i, 90.0
     rel = (bearing_between(lat, lon, tlat, tlon) - hdg) % 360
-    iq_i, _ = simulate(SimConfig(**{**sc_b.__dict__, "bearing_deg": rel, "seed": 100 + i}), arr)
+    iq_i, _ = simulate(SimConfig(**{**sc_b.__dict__, "bearing_deg": rel, "seed": SEED + 100 + i}), arr)
     tr = Tracker()
     for b, eb in bearings_from_bursts(iq_i, cfg):
         st = tr.add(Ping(t=b.start / FS, bearing_deg=eb.bearing_deg, sigma_deg=eb.sigma_deg, strength_db=b.mean_db, ok=eb.ok))

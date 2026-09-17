@@ -26,6 +26,7 @@ Five variables sit at the top of the file. Change one, run it again, read what m
 | `BURST_MS` | How long the phone transmits | Make it longer at low SNR and the error shrinks back |
 | `SPACING_IN` | Distance between antennas on the plate, in inches | 6.5 (about half a wavelength) — watch the loop check in step 3 fall apart. That's the ambiguity that puts a ceiling on antenna spacing |
 | `SOURCE` | `"wideband"` for a realistic noise-like phone signal, `"tone"` for a clean test signal | `"tone"` makes steps 2 and 3 look clean, which separates the messiness of a real phone signal from the direction-finding math underneath |
+| `SEED` | Random seed for the noise. Same seed, same numbers every run | 1, 2, 3 — a different draw of the same setup. How much the answers move between seeds *is* the noise; the sample output is seed 0 |
 
 Change one at a time. If you change two, you won't know which one did it.
 
