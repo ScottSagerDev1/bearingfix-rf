@@ -41,6 +41,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `explore_sim.py`: a narrated, single-burst walkthrough of the whole
   pipeline with five knobs at the top, for learning and for poking at the
   DSP; documented in `docs/explore_sim.md` and linked from the README.
+- `explore_capture.py`: the same six stages on a `hackrf_transfer -r`
+  recording, printing the sim's sample line beside each stage for
+  side-by-side reading; stage 6 becomes a single-position wedge.
 - `tools/sweep.py`: bearing-error sweeps over SNR, burst length, plate
   spacing and sample rate (2 vs 8 MSPS at matched transmitter power), with
   plots and a plain-language write-up in `docs/sweeps/`. `matplotlib` is an
