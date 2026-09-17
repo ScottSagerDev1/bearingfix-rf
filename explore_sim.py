@@ -9,7 +9,8 @@ from bearing_df.array_geom import SquareArray, wavelength
 from bearing_df.sim import SimConfig, simulate
 from bearing_df.dsp import (DFConfig, estimate_bearing, estimate_carrier, slice_baseband,
                             fm_discriminate, lockin, lockin_noise_floor, circ_mean_deg)
-from bearing_df.burst import bearings_from_bursts
+from bearing_df.burst import bearings_from_bursts, bearings_from_prach
+from bearing_df.prach import PRACHDetector
 from bearing_df.tracker import Tracker, Ping
 from bearing_df.geo import WedgeMap, Wedge, bearing_between, distance_m
 
@@ -53,7 +54,9 @@ carrier_hz, _ = estimate_carrier(iq, FS)
 spec = np.abs(np.fft.fftshift(np.fft.fft(iq))) ** 2
 freqs = np.fft.fftshift(np.fft.fftfreq(len(iq), 1 / FS))
 db_at = lambda f: 10 * np.log10(spec[np.argmin(np.abs(freqs - f))] + 1e-30)
-print(f"2. carrier found at {carrier_hz/1e3:+.1f} kHz (sim put it at {sc.carrier_offset_hz/1e3:+.1f} kHz)")
+print(f"2. carrier found at {carrier_hz/1e3:+.1f} kHz (sim put "
+      + (f"the PRACH block's centre at {sc.prach_center_hz/1e3:+.1f} kHz; carrier_offset_hz does not apply" if SOURCE == 'prach'
+         else f"it at {sc.carrier_offset_hz/1e3:+.1f} kHz") + ")")
 print(f"   raw spectrum, dB relative to the carrier bin ({'clean sidebands' if SOURCE == 'tone' else 'buried: PRACH block is 1.08 MHz wide' if SOURCE == 'prach' else 'buried: source is 180 kHz wide'}):  "
       + "  ".join(f"{k:+d}f_rot {db_at(carrier_hz + k*F_ROT) - db_at(carrier_hz):+5.1f}" for k in (-2, -1, 1, 2)))
 # That is why the pipeline doesn't read sidebands. It mixes the carrier to
@@ -121,12 +124,26 @@ print(f"   error {err(e.bearing_deg, TRUE_BEARING_DEG):+.1f} deg, sigma {e.sigma
 # on the circle, weighting by each burst's confidence.
 sc_b = SimConfig(**{**sc.__dict__, "burst": True, "burst_on_s": BURST_MS * 1e-3, "duration_s": 0.1})
 iq_b, _ = simulate(sc_b, arr)
-tr = Tracker()
-res = bearings_from_bursts(iq_b, cfg)
+# A PRACH preamble is a known Zadoff-Chu sequence 1.08 MHz wide, which the
+# 400 kHz slice above cannot hold. So for PRACH: find each preamble by
+# correlating against its root, multiply that sequence back out ("despread")
+# so the wide block collapses to a tone, then run the same chain with a
+# narrow slice. (The sim sends one 1 ms preamble per 5 ms; BURST_MS is ignored.)
+if SOURCE == "prach":
+    det = PRACHDetector(FS, center_hz=sc.prach_center_hz, roots=[sc.prach_root])
+    burst_bearings = lambda iq_: bearings_from_prach(iq_, cfg, det)
+    strength_db = lambda h: 10 * np.log10(h.metric)          # correlator peak/mean, in dB
+    what = f"PRACH preambles, each despread against prach_root={sc.prach_root} first"
+else:
+    burst_bearings = lambda iq_: bearings_from_bursts(iq_, cfg)
+    strength_db = lambda b: b.mean_db
+    what = f"bursts of {BURST_MS} ms"
+tr, st = Tracker(), None
+res = burst_bearings(iq_b)
 for b, eb in res:
-    st = tr.add(Ping(t=b.start / FS, bearing_deg=eb.bearing_deg, sigma_deg=eb.sigma_deg, strength_db=b.mean_db, ok=eb.ok))
+    st = tr.add(Ping(t=b.start / FS, bearing_deg=eb.bearing_deg, sigma_deg=eb.sigma_deg, strength_db=strength_db(b), ok=eb.ok))
 per_burst = [err(eb.bearing_deg, TRUE_BEARING_DEG) for _, eb in res]
-print(f"5. {len(res)} bursts of {BURST_MS} ms, per-burst errors: " + " ".join(f"{v:+.0f}" for v in per_burst))
+print(f"5. {len(res)} {what}, per-burst errors: " + " ".join(f"{v:+.0f}" for v in per_burst))
 print(f"   mean |error| per burst {np.mean(np.abs(per_burst)):.1f}  ->  fused {st.bearing_deg:.1f} +- {st.half_width_deg:.1f},"
       f" error {err(st.bearing_deg, TRUE_BEARING_DEG):+.1f} deg from {st.n_used} pings\n")
 
@@ -144,9 +161,12 @@ for i in range(12):
     lat, lon, hdg = 39.65, -84.26 + 0.015 * i, 90.0
     rel = (bearing_between(lat, lon, tlat, tlon) - hdg) % 360
     iq_i, _ = simulate(SimConfig(**{**sc_b.__dict__, "bearing_deg": rel, "seed": SEED + 100 + i}), arr)
-    tr = Tracker()
-    for b, eb in bearings_from_bursts(iq_i, cfg):
-        st = tr.add(Ping(t=b.start / FS, bearing_deg=eb.bearing_deg, sigma_deg=eb.sigma_deg, strength_db=b.mean_db, ok=eb.ok))
+    tr, st = Tracker(), None
+    for b, eb in burst_bearings(iq_i):
+        st = tr.add(Ping(t=b.start / FS, bearing_deg=eb.bearing_deg, sigma_deg=eb.sigma_deg, strength_db=strength_db(b), ok=eb.ok))
+    if st is None or st.bearing_deg is None:
+        print(f"   {i:4d}  {rel:9.1f}          no fix: no accepted pings")
+        continue
     wm.add(Wedge(lat, lon, (hdg + st.bearing_deg) % 360, max(st.half_width_deg, 3.0), t=3.0 * i))
     print(f"   {i:4d}  {rel:9.1f}          {st.bearing_deg:6.1f} +- {st.half_width_deg:4.1f}")
 f = wm.fix()
