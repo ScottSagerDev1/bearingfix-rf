@@ -18,7 +18,7 @@ TRUE_BEARING_DEG = 137.0   # where the phone is, compass degrees from the plate'
 SNR_DB = 3.0               # phone power vs noise in the 2 MHz capture; sweeps say < -7 dB falls apart
 BURST_MS = 1.0             # how long each transmission lasts; 1 ms = one LTE subframe, try 0.4 or 2.0
 SPACING_IN = 3.5           # plate side in inches; cellular_plate() is 3.5. Try 2.0 (weak) or 6.5 (ambiguous, ~lambda/2)
-SOURCE = "wideband"        # "wideband" = noise-like LTE stand-in (realistic); "tone" = clean carrier (ideal)
+SOURCE = "wideband"        # "wideband" = noise-like LTE stand-in (realistic); "tone" = clean carrier (ideal); "prach" = one LTE random-access preamble per 5 ms, 1.08 MHz wide
 SEED = 0                   # random seed for the noise; change it to see a different draw of the same setup, keep it to make runs repeatable
 # ----------------------------------------------------------------------------
 
@@ -48,12 +48,13 @@ print(f"   mean power {np.mean(np.abs(iq)**2):.3f} (signal + noise; the phone al
 # can't: the source is 180 kHz wide and the +-8 kHz sidebands are buried in
 # it, and "the carrier" is just the strongest bin in that lump (so the
 # estimate below can be off by tens of kHz — step 3 shows why that's fine).
+# The PRACH source is the same story, only wider (1.08 MHz).
 carrier_hz, _ = estimate_carrier(iq, FS)
 spec = np.abs(np.fft.fftshift(np.fft.fft(iq))) ** 2
 freqs = np.fft.fftshift(np.fft.fftfreq(len(iq), 1 / FS))
 db_at = lambda f: 10 * np.log10(spec[np.argmin(np.abs(freqs - f))] + 1e-30)
 print(f"2. carrier found at {carrier_hz/1e3:+.1f} kHz (sim put it at {sc.carrier_offset_hz/1e3:+.1f} kHz)")
-print(f"   raw spectrum, dB relative to the carrier bin ({'clean sidebands' if SOURCE == 'tone' else 'buried: source is 180 kHz wide'}):  "
+print(f"   raw spectrum, dB relative to the carrier bin ({'clean sidebands' if SOURCE == 'tone' else 'buried: PRACH block is 1.08 MHz wide' if SOURCE == 'prach' else 'buried: source is 180 kHz wide'}):  "
       + "  ".join(f"{k:+d}f_rot {db_at(carrier_hz + k*F_ROT) - db_at(carrier_hz):+5.1f}" for k in (-2, -1, 1, 2)))
 # That is why the pipeline doesn't read sidebands. It mixes the carrier to
 # 0 Hz, low-passes to 400 kHz, then takes the phase step sample-to-sample (an

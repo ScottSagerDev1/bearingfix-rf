@@ -25,7 +25,7 @@ Five variables sit at the top of the file. Change one, run it again, read what m
 | `SNR_DB` | How loud the phone is compared to the noise | Walk it down to 0, then −5. Watch the error and the ± width grow |
 | `BURST_MS` | How long the phone transmits | Make it longer at low SNR and the error shrinks back |
 | `SPACING_IN` | Distance between antennas on the plate, in inches | 6.5 (about half a wavelength) — watch the loop check in step 3 fall apart. That's the ambiguity that puts a ceiling on antenna spacing |
-| `SOURCE` | `"wideband"` for a realistic noise-like phone signal, `"tone"` for a clean test signal | `"tone"` makes steps 2 and 3 look clean, which separates the messiness of a real phone signal from the direction-finding math underneath |
+| `SOURCE` | `"wideband"` for a realistic noise-like phone signal, `"tone"` for a clean test signal, `"prach"` for one LTE random-access preamble every 5 ms in a 1.08 MHz block | `"tone"` makes steps 2 and 3 look clean, which separates the messiness of a real phone signal from the direction-finding math underneath. `"prach"` is what a phone sends when it first calls for a tower; it is wider than the 400 kHz slice and mostly silent, so the pipeline as written does not lock onto it |
 | `SEED` | Random seed for the noise. Same seed, same numbers every run | 1, 2, 3 — a different draw of the same setup. How much the answers move between seeds *is* the noise; the sample output is seed 0 |
 
 Change one at a time. If you change two, you won't know which one did it.
