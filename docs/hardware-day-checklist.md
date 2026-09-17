@@ -1,5 +1,9 @@
 # Hardware day checklist — HackRF Pro + Opera Cake
 
+Pi setup: on a fresh Pi 5 (64-bit Pi OS), `bash tools/setup_pi.sh` installs
+the 2026.01.3 host tools, the udev rule, this repo and its venv, then runs
+the smoke test below. Safe to re-run.
+
 Run `python tools/hardware_smoke.py` first: it covers steps 0–2 and a
 levels/spectrum sanity check in under a minute.
 
