@@ -18,6 +18,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   needs the radio is marked `UNVERIFIED` with a test in
   `docs/hardware-day-checklist.md`.
 
+- `DFConfig` now stores bandwidths and durations in physical units:
+  `slice_bw_hz` (was `slice_bw`, default `0.2 * fs`), `edge_window_s`
+  (was `edge_window` in samples) and `filter_len_s` (was `numtaps`), with
+  `edge_window` and `numtaps` derived from `fs`. `SimConfig` gains
+  `source_filter_s` for the same reason. Defaults are unchanged at 2 MSPS
+  (400 kHz, 2 µs, 401 taps) and bit-identical in output; at 8 MSPS the
+  estimator now behaves the same instead of admitting 4× the noise.
+  CLI: `--slice-bw` is in Hz, new `--edge-window-us`.
+- `tools/sweep.py`: `--sweeps` reruns a subset and merges the rest from
+  `results.json` (`--sweeps none` re-analyses only); the SNR floor is now the
+  interpolated 10° crossing instead of the nearest 2 dB grid point. SNR
+  sweep rerun after the units change: 8 MSPS now matches 2 MSPS.
+
 ### Fixed
 
 - `operacake_time_mode` passed a non-existent `-T` flag to

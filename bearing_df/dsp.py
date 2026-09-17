@@ -17,7 +17,8 @@ Why the slice must be WIDE, not narrow: the switching sidebands sit at
 +-f_rot, +-2 f_rot, ... around the carrier. A filter narrower than a few
 times f_rot removes the very modulation that carries the bearing (this was
 measured, not guessed: a 2 kHz slice fails, a 400 kHz slice works). Default
-slice_bw is 0.2 * fs. Narrow it only to exclude a neighbouring transmitter.
+slice_bw_hz is 400 kHz at any sample rate. Narrow it only to exclude a
+neighbouring transmitter.
 
 Why edge-only lock-in: the bearing information lives entirely in the phase
 step at each switch instant. The samples between edges add noise and (for a
@@ -201,22 +202,30 @@ class BearingEstimate:
 
 @dataclass
 class DFConfig:
+    """Everything that is a bandwidth or a duration is stored in Hz or seconds
+    and converted to samples from ``fs`` on use, so changing the sample rate
+    does not silently change what the estimator does."""
     fs: float = 2e6
     f_rot: float = 8_000.0
-    slice_bw: float | None = None       # default 0.2 * fs
-    numtaps: int = 401
+    slice_bw_hz: float = 400e3          # 50 x f_rot; must keep several switching sidebands
+    filter_len_s: float = 200.5e-6      # slice FIR length (401 taps at 2 MSPS)
     block_rotations: int = 20           # sub-block length for sigma estimate
     switch_start_sample: float | None = 0.0   # None = recover from the capture
-    edge_window: int = 4                # samples averaged each side of an edge
+    edge_window_s: float = 2e-6         # averaged each side of an edge (4 samples at 2 MSPS)
     amp_weight: bool = False
     min_lockin_snr_db: float = 6.0
     max_sigma_deg: float = 30.0
     carrier_band: tuple | None = None   # (lo, hi) Hz to search, None = whole capture
     cal: Calibration = field(default_factory=Calibration)
 
-    def __post_init__(self):
-        if self.slice_bw is None:
-            self.slice_bw = 0.2 * self.fs
+    @property
+    def numtaps(self) -> int:
+        # odd, so the filter delay is a whole number of samples and edge timing is preserved
+        return max(int(round(self.filter_len_s * self.fs)) | 1, 3)
+
+    @property
+    def edge_window(self) -> int:
+        return max(int(round(self.edge_window_s * self.fs)), 1)
 
 
 def estimate_bearing(iq: np.ndarray, cfg: DFConfig, carrier_hz: float | None = None) -> BearingEstimate:
@@ -224,7 +233,7 @@ def estimate_bearing(iq: np.ndarray, cfg: DFConfig, carrier_hz: float | None = N
     if carrier_hz is None:
         carrier_hz, _ = estimate_carrier(iq, cfg.fs, band=cfg.carrier_band)
 
-    x = slice_baseband(iq, cfg.fs, carrier_hz, cfg.slice_bw, cfg.numtaps)
+    x = slice_baseband(iq, cfg.fs, carrier_hz, cfg.slice_bw_hz, cfg.numtaps)
 
     if cfg.switch_start_sample is None:
         t_edge, _ = estimate_switch_timing(x, cfg.fs, cfg.f_rot)

@@ -26,8 +26,10 @@ def _cfg(a, cal=None) -> DFConfig:
                  switch_start_sample=None if a.recover_timing else a.switch_start)
     if cal is not None:
         c.cal = cal
-    if a.slice_bw:
-        c.slice_bw = a.slice_bw
+    if a.slice_bw is not None:
+        c.slice_bw_hz = a.slice_bw
+    if a.edge_window_us is not None:
+        c.edge_window_s = a.edge_window_us * 1e-6
     return c
 
 
@@ -120,8 +122,10 @@ def main(argv=None):
     def common(sp):
         sp.add_argument("--fs", type=float, default=2e6)
         sp.add_argument("--frot", type=float, default=8000.0)
-        sp.add_argument("--slice-bw", type=float, default=0.0)
-        sp.add_argument("--switch-start", type=float, default=0.0)
+        sp.add_argument("--slice-bw", type=float, default=None, help="slice bandwidth in Hz (default 400e3)")
+        sp.add_argument("--edge-window-us", type=float, default=None,
+                        help="averaging window each side of a switch edge, microseconds (default 2)")
+        sp.add_argument("--switch-start", type=float, default=0.0, help="sample index where element 0 starts")
         sp.add_argument("--recover-timing", action="store_true", help="estimate switch timing from the capture")
 
     s = sub.add_parser("sim"); common(s)

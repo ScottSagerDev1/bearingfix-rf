@@ -3,6 +3,8 @@
     python tools/sweep.py                  # full run -> docs/sweeps/
     python tools/sweep.py --quick          # few points, few trials, same code path
     python tools/sweep.py --trials 20 --workers 8 --out /tmp/sweeps
+    python tools/sweep.py --sweeps snr           # rerun one sweep, keep the rest from results.json
+    python tools/sweep.py --sweeps none          # run nothing; re-analyse and re-plot results.json
 
 Every point is N bearings evenly spaced around the circle x N trials of a
 noise-like (LTE stand-in) source. Error is the mean absolute circular error
@@ -139,8 +141,9 @@ def plan(trials: int = 50, n_bearings: int = 8, quick: bool = False) -> list[Job
     snr_x = [-6.0, 14.0] if quick else [float(s) for s in range(-10, 21, 2)]
     snr_curves = [("2 MSPS", 2e6, {}), ("8 MSPS", 8e6, {})]
     if not quick:
-        snr_curves += [("8 MSPS, slice 400 kHz", 8e6, {"slice_bw": 400e3}),
-                       ("8 MSPS, slice 400 kHz, edge_window 16", 8e6, {"slice_bw": 400e3, "edge_window": 16})]
+        # what 8 MSPS looked like when slice_bw was 0.2*fs and edge_window was 4 samples
+        snr_curves += [("8 MSPS, pre-refactor defaults (1.6 MHz slice, 0.5 µs window)", 8e6,
+                        {"slice_bw_hz": 1.6e6, "edge_window_s": 0.5e-6})]
 
     burst_x_ms = [0.2, 1.0] if quick else [float(v) for v in np.linspace(0.2, 2.0, 10)]
     burst_curves = [("10 dB", 10.0)] + ([] if quick else [("3 dB", 3.0)])
@@ -199,13 +202,19 @@ def _labels(points, sweep):
 
 
 def snr_floor(curve, thresh=ERR_THRESH_DEG):
-    """Lowest SNR from which every higher point stays under ``thresh``."""
+    """SNR at which the error curve crosses ``thresh``, scanning down from
+    high SNR and interpolating between the two straddling points so the
+    answer does not snap to the sample grid. None if never under ``thresh``."""
     floor = None
-    for p in reversed(curve):
+    for i in range(len(curve) - 1, -1, -1):
+        p = curve[i]
         if np.isnan(p.mean_abs_deg) or p.mean_abs_deg > thresh:
+            if floor is not None and not np.isnan(p.mean_abs_deg):
+                q = curve[i + 1]
+                floor = p.x + (q.x - p.x) * (p.mean_abs_deg - thresh) / (p.mean_abs_deg - q.mean_abs_deg)
             break
         floor = p.x
-    return floor
+    return None if floor is None else round(float(floor), 1)
 
 
 def shortest_usable_burst(curve, attr="mean_abs_deg", thresh=ERR_THRESH_DEG, min_detect=DETECT_THRESH):
@@ -297,7 +306,7 @@ def write_results(points: list[Point], analysis: dict, out_dir: Path) -> None:
              "## Computed findings", ""]
     for lab, v in analysis["snr_floor_deg10"].items():
         lines.append(f"- SNR floor for ≤ {ERR_THRESH_DEG:.0f}° error, **{lab}**: "
-                     + (f"**{v:+.0f} dB** in 2 MHz" if v is not None else "never reached"))
+                     + (f"**{v:+.1f} dB** in 2 MHz" if v is not None else "never reached"))
     for lab, v in analysis["shortest_usable_burst_ms"].items():
         vf = analysis["shortest_usable_burst_fused_ms"].get(lab)
         lines.append(f"- Shortest usable burst at {lab} (≥ {100 * DETECT_THRESH:.0f}% detected and ≤ "
@@ -411,13 +420,20 @@ def main(argv=None):
     ap.add_argument("--bearings", type=int, default=8)
     ap.add_argument("--workers", type=int, default=None)
     ap.add_argument("--quick", action="store_true", help="3 trials, 2 bearings, 2 points per sweep")
+    ap.add_argument("--sweeps", default="snr,burst,spacing",
+                    help="comma list of sweeps to run; the others are kept from an existing results.json")
     ap.add_argument("--no-plot", action="store_true")
     a = ap.parse_args(argv)
     if a.quick:
         a.trials, a.bearings = 3, 2
-    jobs = plan(a.trials, a.bearings, a.quick)
+    wanted = set(a.sweeps.split(","))
+    jobs = [j for j in plan(a.trials, a.bearings, a.quick) if j.sweep in wanted]
     print(f"{len(jobs)} jobs x {a.bearings} bearings x {a.trials} trials", file=sys.stderr)
     pts = run_jobs(jobs, a.workers)
+    prev = a.out / "results.json"
+    if prev.exists():
+        kept = [Point(**p) for p in json.loads(prev.read_text())["points"] if p["sweep"] not in wanted]
+        pts = kept + pts
     an = analyze(pts)
     write_results(pts, an, a.out)
     if not a.no_plot:

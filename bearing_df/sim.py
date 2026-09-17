@@ -29,6 +29,7 @@ class SimConfig:
     prach_root: int = 129           # only for "prach"; one preamble per burst_period_s
     prach_center_hz: float = 300e3  # where the 1.08 MHz PRACH block sits in baseband
     source_bw_hz: float = 180e3     # only for "wideband" (one LTE resource block-ish)
+    source_filter_s: float = 127.5e-6   # FIR length shaping the wideband source (255 taps at 2 MSPS)
     burst: bool = False             # gate the source on/off
     burst_on_s: float = 1e-3        # LTE subframe
     burst_period_s: float = 5e-3
@@ -60,7 +61,7 @@ def simulate(cfg: SimConfig, array: SquareArray, switch_offset_samples: int = 0)
     elif cfg.source == "wideband":
         # complex Gaussian noise band-limited to source_bw_hz: looks like SC-FDMA
         w = rng.standard_normal(len(t)) + 1j * rng.standard_normal(len(t))
-        taps = signal.firwin(255, cfg.source_bw_hz / 2, fs=cfg.fs)
+        taps = signal.firwin(int(round(cfg.source_filter_s * cfg.fs)) | 1, cfg.source_bw_hz / 2, fs=cfg.fs)
         src = signal.fftconvolve(w, taps, mode="same")
         src /= np.sqrt(np.mean(np.abs(src) ** 2))
     elif cfg.source == "prach":

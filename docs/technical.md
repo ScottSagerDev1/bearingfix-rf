@@ -37,7 +37,9 @@ code runs on recorded `.iq` files and then live.
 
 1. **Do not narrowband-filter below a few × f_rot.** The bearing lives in
    the switching sidebands at ±f_rot, ±2f_rot… A 2 kHz slice destroys it;
-   400 kHz works. `slice_bw` defaults to 0.2 × fs.
+   400 kHz works. `slice_bw_hz` defaults to 400 kHz at any sample rate;
+   every bandwidth and duration in `DFConfig` is stored in Hz or seconds
+   and converted to samples from `fs` on use.
 2. **Use only the samples at the switch edges.** Between edges there is no
    bearing information, only noise and (for LTE-type sources) the source's
    own random phase. Edge-only lock-in cut wideband-source error from ~10°

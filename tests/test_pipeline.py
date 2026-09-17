@@ -24,6 +24,19 @@ def test_spacing_rules():
     assert SquareArray(0.3).spacing_check(830e6)["ambiguous"]
 
 
+def test_physical_units_do_not_depend_on_fs():
+    c2, c8 = DFConfig(fs=2e6), DFConfig(fs=8e6)
+    # the 2 MSPS defaults are the historical sample counts
+    assert (c2.edge_window, c2.numtaps) == (4, 401)
+    # bandwidths and durations are identical at 8 MSPS; only the sample counts scale
+    assert c2.slice_bw_hz == c8.slice_bw_hz
+    assert c2.edge_window_s == c8.edge_window_s
+    assert (c8.edge_window, c8.numtaps) == (16, 1605)
+    assert c2.edge_window / 2e6 == c8.edge_window / 8e6
+    tw2, tw8 = 2e6 / c2.numtaps, 8e6 / c8.numtaps       # FIR transition width scales as fs / numtaps
+    assert abs(tw8 - tw2) / tw2 < 0.01
+
+
 @pytest.mark.parametrize("b", BEARINGS)
 def test_tone_bearing_clean(b):
     iq, _ = simulate(SimConfig(bearing_deg=b, snr_db=10, duration_s=0.02), ARR)
@@ -90,7 +103,7 @@ def test_rotation_dir_and_calibration():
 
 def test_switch_glitch_tolerated():
     iq, _ = simulate(SimConfig(bearing_deg=250, switch_glitch=2.0, snr_db=10), ARR)
-    e = estimate_bearing(iq, DFConfig(edge_window=6))
+    e = estimate_bearing(iq, DFConfig(edge_window_s=3e-6))
     assert abs(err(e.bearing_deg, 250)) < 6.0
 
 

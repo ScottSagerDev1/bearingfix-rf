@@ -68,7 +68,7 @@ def bearings_from_bursts(iq: np.ndarray, cfg: DFConfig, threshold_db: float = 5.
     """
     if carrier_hz is None:
         carrier_hz, _ = estimate_carrier(iq, cfg.fs, band=cfg.carrier_band)
-    x = slice_baseband(iq, cfg.fs, carrier_hz, cfg.slice_bw, cfg.numtaps)
+    x = slice_baseband(iq, cfg.fs, carrier_hz, cfg.slice_bw_hz, cfg.numtaps)
     bursts, floor = detect_bursts(x, cfg.fs, threshold_db)
     guard = int(cfg.fs * guard_s)
     out = []
@@ -89,7 +89,7 @@ def bearings_from_bursts(iq: np.ndarray, cfg: DFConfig, threshold_db: float = 5.
     return out
 
 
-def bearings_from_prach(iq: np.ndarray, cfg: DFConfig, detector, slice_bw: float = 64e3,
+def bearings_from_prach(iq: np.ndarray, cfg: DFConfig, detector, slice_bw_hz: float = 64e3,
                         refine: bool = False):
     """Coherent path for a no-bars phone: detect PRACH preambles with the
     Zadoff-Chu correlator, despread each one to a tone-like signal, then run
@@ -108,7 +108,7 @@ def bearings_from_prach(iq: np.ndarray, cfg: DFConfig, detector, slice_bw: float
             continue
         z = despread(seg, h, cfg.fs)
         sub = DFConfig(**{**cfg.__dict__})
-        sub.slice_bw = slice_bw
+        sub.slice_bw_hz = slice_bw_hz
         sub.block_rotations = 2
         if cfg.switch_start_sample is not None:
             sub.switch_start_sample = cfg.switch_start_sample - h.start

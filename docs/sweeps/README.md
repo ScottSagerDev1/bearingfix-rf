@@ -1,7 +1,9 @@
 # Parameter sweeps: where the pipeline breaks, and why
 
 Generated 2026-09-17 with `python tools/sweep.py` (50 trials × 8 bearings per
-point, ~14 min on 16 cores). Exact numbers are in [results.md](results.md);
+point, ~14 min on 16 cores; the SNR sweep was rerun the same day after
+`DFConfig` moved to physical units — see section 4). Exact numbers are in
+[results.md](results.md);
 re-running the tool regenerates that file and the PNGs but not this page, so
 if the numbers below disagree with results.md, results.md is newer.
 
@@ -19,13 +21,13 @@ that 359° vs 1° counts as 2°, not 358°.
 
 | Question | Answer |
 |---|---|
-| SNR floor for ≤ 10° error, 2 MSPS | **−6 dB** in 2 MHz |
-| SNR floor for ≤ 10° error, 8 MSPS (pipeline defaults) | **−4 dB** — worse |
-| SNR floor for ≤ 10° error, 8 MSPS (slice and edge window held in physical units) | **−8 dB** — best |
+| SNR floor for ≤ 10° error, 2 MSPS | **−6.8 dB** in 2 MHz |
+| SNR floor for ≤ 10° error, 8 MSPS (current defaults) | **−7.0 dB** — same as 2 MSPS within noise |
+| SNR floor for ≤ 10° error, 8 MSPS (pre-refactor defaults) | **−4.6 dB** — the bug the refactor fixed |
 | Shortest burst that gives ≤ 10° on its own | **none** (2 ms burst is still 12°) |
 | Shortest burst that gives ≤ 10° once 100 ms of them are fused | **0.6 ms** |
 | Where wider plate spacing stops helping | **about λ/4 to λ/3**; catastrophic from ~0.45 λ |
-| Which sample rate to default to | **Don't switch yet.** 8 MSPS wins only if two other defaults change with it. See the last section. |
+| Which sample rate to default to | **Still 2 MSPS.** The DSP no longer cares; the decision is now purely hardware (aliasing) and CPU. See the last section. |
 
 ## 1. SNR
 
@@ -38,10 +40,13 @@ holds 4× the noise, so the *same transmitter* reads 6 dB lower in the raw
 8 MSPS SNR. The sweep corrects for that; every curve on this plot is the same
 phone at the same distance.
 
-**Result.** At 2 MSPS the pipeline holds under 10° down to −6 dB — the phone
-can be *weaker than the noise* in a 2 MHz window and still give a usable
-bearing. Below that it falls apart fast: 11° at −8 dB, 17° at −10 dB (and
-the 90th percentile at −10 dB is 39°, i.e. one estimate in ten is junk).
+**Result.** At 2 MSPS the pipeline holds under 10° down to about −7 dB — the
+phone can be *weaker than the noise* in a 2 MHz window and still give a
+usable bearing. Below that it falls apart fast: 11° at −8 dB, 17° at −10 dB
+(and the 90th percentile at −10 dB is 39°, i.e. one estimate in ten is
+junk). The floor is reported as where the curve crosses 10°, interpolated
+between the 2 dB sample points; the raw points either side are 9.1° at
+−6 dB and 11.4° at −8 dB.
 
 **Why it fails at low SNR — the discriminator threshold.** The bearing lives
 in the size of the phase *step* at each switch instant. The FM discriminator
@@ -139,37 +144,50 @@ and λ/3. Going from 3.5 in to ~4.7 in (λ/3 at 830 MHz) would buy well under
 cliff — and the sim does not model multipath, which punishes wider spacing
 in the real world. 3.5 in stays.
 
-## 4. Sample rate — should the default move to 8 MSPS?
+## 4. Sample rate — does the DSP care?
 
-Read the SNR plot again with the three 8 MSPS curves in mind:
+The first run of this sweep found a bug, and the plot now shows the before
+and after:
 
-- **8 MSPS, pipeline defaults** (orange): *worse* than 2 MSPS below 0 dB
-  (34° vs 17° at −10 dB; floor −4 dB vs −6 dB) but *better* above 0 dB
-  (0.8° vs 3.1° at 20 dB).
-- **8 MSPS, slice held at 400 kHz** (green): tracks 2 MSPS almost exactly.
-- **8 MSPS, slice 400 kHz and edge window 16 samples** (yellow): best of
-  all — floor −8 dB, and never worse than 2 MSPS.
+- **8 MSPS, pre-refactor defaults** (green): *worse* than 2 MSPS below
+  0 dB (37° vs 17° at −10 dB; floor −4.6 dB vs −6.8 dB) but *better* above
+  0 dB (0.8° vs 3.1° at 20 dB).
+- **8 MSPS, current defaults** (orange): sits on top of the 2 MSPS curve
+  everywhere. Floor −7.0 dB vs −6.8 dB; averaged over the whole SNR axis the
+  difference is 0.0°.
 
-**Why the defaults hurt at low SNR.** `DFConfig.slice_bw` defaults to
-0.2 × fs. At 8 MSPS that is a 1.6 MHz slice instead of 400 kHz — 4× the
-noise bandwidth feeding the discriminator, for a source that is only 180 kHz
-wide. That drags the threshold up by roughly 6 dB, and the curve shows about
-that. Holding the slice at 400 kHz (green) removes the penalty.
+**What the bug was.** Two `DFConfig` parameters were counted in samples,
+so they silently changed meaning with the sample rate. The slice filter
+defaulted to 0.2 × fs: at 8 MSPS that is a 1.6 MHz slice instead of 400 kHz,
+4× the noise bandwidth feeding the discriminator for a source only 180 kHz
+wide — worth roughly 6 dB of threshold, and the green curve shows about
+that. The edge window was 4 samples: at 8 MSPS that is 0.5 µs each side of
+the edge instead of 2 µs, so the source's own phase drift inside the window
+was a quarter of what it was and the high-SNR floor dropped from 3° to under
+1°. (That second effect is the cleanest demonstration in this whole sweep
+that the high-SNR floor is self-noise, not thermal noise.)
 
-**Why the defaults help at high SNR.** `DFConfig.edge_window` is 4
-*samples*. At 8 MSPS that is 0.5 µs each side of the edge instead of 2 µs,
-so the source's own phase drift inside the window is a quarter of what it
-was, and the high-SNR floor drops from 3° to under 1°. That is the cleanest
-demonstration in this whole sweep that the high-SNR floor is self-noise, not
-thermal noise.
+**The fix.** `DFConfig` now stores `slice_bw_hz`, `edge_window_s` and
+`filter_len_s` in Hz and seconds and derives sample counts from `fs`. At
+2 MSPS the derived values are the old 400 kHz / 4 samples / 401 taps, and
+the output is bit-identical. At 8 MSPS the estimator now does the same
+physical thing, and the orange curve is the result.
 
-**Why the fourth curve wins.** Make both parameters physical: keep the
-slice at 400 kHz and stretch the window back to ~2 µs (16 samples at 8 MSPS)
-so 4× as many samples are averaged over the same time span. Now noise
-bandwidth matches 2 MSPS and the extra samples are pure gain. The remaining
-difference (−8 vs −6 dB floor) is small and consistent with the edges
-landing on exact sample boundaries at 8 MSPS (dwell 250) instead of half
-way between them at 2 MSPS (dwell 62.5).
+**A correction to the first write-up.** The first run included an 8 MSPS
+curve with the slice and window in physical units but the filter still at
+401 taps, and it reported a −8 dB floor. Rerunning with today's defaults
+gives −7.0 dB, and a direct check of a 50 µs versus 200 µs filter at both
+rates shows no difference (16.6° vs 16.9° at −10 dB at 2 MSPS; 18.0° vs
+18.4° at 8 MSPS). The −8 dB was seed luck: that curve landed at 9.9° at
+−8 dB, a hair under a hard 10° cut. The floor is now reported as the
+interpolated 10° crossing so a 0.1° wobble cannot move it by 2 dB.
+
+**Why 8 MSPS is not simply better in the sim.** Once the slice bandwidth
+and edge window are the same in Hz and seconds, the discriminator sees the
+same signal and the same noise at either rate. The extra samples inside the
+2 µs window are highly correlated after a 400 kHz filter (its response
+lasts ~2.5 µs), so averaging 16 of them instead of 4 buys almost nothing.
+Sample rate is not a free SNR knob.
 
 **The sim cannot answer the hardware half.** GSG's reason to run ≥ 8 MSPS
 is analog: the ADC is not specified below 8 MHz and the narrowest baseband
@@ -177,24 +195,13 @@ filter (1.75 MHz) cannot stop energy 1–2 MHz off-carrier from aliasing into a
 2 MSPS capture. None of that is modelled here. Checklist step 10 is the
 real-world A/B.
 
-**Recommendation: don't change the default yet.** 8 MSPS is clearly better
-*if* the two sample-count parameters are re-expressed in physical units at
-the same time; with today's defaults it is a wash that trades low-SNR reach
-for high-SNR precision. If you decide to switch, everything that would need
-to move together:
-
-- `DFConfig` (`dsp.py`): `fs = 8e6`; `slice_bw` default from `0.2 * fs` to a
-  fixed ~400 kHz (or a bandwidth-based rule capped well below fs);
-  `edge_window` from 4 samples to a duration (~2 µs) converted to samples.
-- `SimConfig.fs` (`sim.py`) and `HackRFSettings.fs` (`hackrf_io.py`) to 8e6.
-- CLI (`cli.py`): `--fs` default and the usage examples in the docstring.
-- Tests: all 37 are tuned at 2 MSPS — `2e6` appears as a literal in the
-  timing-recovery, tracker and PRACH tests; `PRACHDetector` and
-  `generate_prach` build sequences from fs; every tolerance would need
-  re-checking at 8 MSPS. `test_sweep.py` is rate-agnostic.
-- Docs: `technical.md` simulation numbers; checklist step 6 (dwell 250,
-  `--frot 8000` — which is actually tidier than 62.5 / 8064.5).
-- Cost: 4× the bytes (16 MB per second of capture) and ~4× the CPU
-  (83 ms vs 22 ms per 20 ms capture on this machine). On a Raspberry Pi
-  that is the difference between keeping up and not, so measure it there
-  before committing.
+**Recommendation: keep 2 MSPS as the default for now.** The DSP no longer
+has an opinion. What is left is the aliasing question (hardware day) against
+4× the bytes (16 MB per second of capture) and ~4× the CPU (83 ms vs 22 ms
+per 20 ms capture on this machine — on a Raspberry Pi that is the
+difference between keeping up and not). If hardware day shows aliasing at
+2 MSPS, switching is now a small change: `DFConfig.fs`, `SimConfig.fs`,
+`HackRFSettings.fs`, the CLI `--fs` default and docstring examples, the
+`2e6` literals in the timing-recovery, tracker and PRACH tests (PRACH
+builds its sequences from fs, so its tolerances need re-checking), and
+checklist step 6 (dwell 250, `--frot 8000` — tidier than 62.5 / 8064.5).
