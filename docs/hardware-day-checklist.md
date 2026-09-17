@@ -1,5 +1,8 @@
 # Hardware day checklist — HackRF Pro + Opera Cake
 
+Run `python tools/hardware_smoke.py` first: it covers steps 0–2 and a
+levels/spectrum sanity check in under a minute.
+
 Run these in order. Do not trust a bearing until steps 1–8 pass. Expected
 output is from the hackrf 2026.01.3 host tools, libhackrf and firmware
 source; anything marked UNVERIFIED is what this checklist exists to settle.
