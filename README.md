@@ -32,7 +32,7 @@ Simulator built and tested, no hardware in hand yet. Range, accuracy, and whethe
 
 ## Technical details
 
-See [bearing_df/README.md](bearing_df/README.md).
+See [docs/technical.md](docs/technical.md).
 
 ## License and trademark
 
