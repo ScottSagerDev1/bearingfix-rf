@@ -44,6 +44,10 @@ python explore_sim.py
 What each stage means and what to try: [docs/explore_sim.md](docs/explore_sim.md).
 Would rather read than install? A full example run: [docs/explore_sim_sample_output.txt](docs/explore_sim_sample_output.txt).
 
+![Simulated wedge map: twelve translucent wedges from a drive-by overlapping near the phone](docs/wedge_map_sim.png)
+
+The script's last stage, drawn: each stop lays a wedge along its measured bearing, and where twelve of them pile up is the fix (`tools/plot_wedges.py`).
+
 ## Technical details
 
 See [docs/technical.md](docs/technical.md).

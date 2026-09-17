@@ -43,6 +43,10 @@ Change one at a time. If you change two, you won't know which one did it.
 
 **6. Wedge map.** A 12-stop simulated drive past the phone. Each stop produces a wedge; overlapping wedges from different positions narrow down to a fix. The last line is how far that fix landed from the truth.
 
+![Simulated wedge map: twelve translucent wedges from a drive-by overlapping near the phone](wedge_map_sim.png)
+
+That stage, drawn by `tools/plot_wedges.py` from the same stops and seeds: the wedges are wide because the fused bearings are ±15–45°, and they still cross within a couple of kilometres of the phone.
+
 ## Two things worth noticing
 
 These are explained in the comments too, but they're the reason the script exists.
