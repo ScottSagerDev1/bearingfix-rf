@@ -1,0 +1,6 @@
+.venv/
+.pytest_cache/
+__pycache__/
+*.iq
+*.egg-info/
+CLAUDE.md
