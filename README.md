@@ -30,6 +30,17 @@ county or volunteer team can squeeze into its budget.
 
 Simulator built and tested, no hardware in hand yet. Range, accuracy, and whether BLE is detectable from altitude are open questions; the devlog will report what I measure, including the disappointing results. The wedge-map display is a design goal, not a shipped feature.
 
+## Try it
+
+No hardware needed. [explore_sim.py](explore_sim.py) puts one imaginary phone at a bearing you choose and narrates every stage of the pipeline as it finds it — raw I/Q, the switching tone, the phase at each antenna, the bearing, fusion, the map. Five knobs at the top, three seconds to run:
+
+```
+pip install -e .
+python explore_sim.py
+```
+
+What each stage means and what to try: [docs/explore_sim.md](docs/explore_sim.md).
+
 ## Technical details
 
 See [docs/technical.md](docs/technical.md).
