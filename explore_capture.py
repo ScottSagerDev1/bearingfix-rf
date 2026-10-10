@@ -34,7 +34,7 @@ ap.add_argument("--cal", default="", help="calibration.json from `python -m bear
 ap.add_argument("--spacing-in", type=float, default=3.5, help="plate side in inches")
 ap.add_argument("--max-seconds", type=float, default=0.1, help="how much of the file to read")
 ap.add_argument("--lat", type=float, default=39.65)
-ap.add_argument("--lon", type=float, default=-84.26)
+ap.add_argument("--lon", type=float, default=-100.16)
 ap.add_argument("--heading", type=float, default=90.0, help="compass direction the plate's forward mark points")
 a = ap.parse_args()
 
