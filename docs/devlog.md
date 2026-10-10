@@ -2,6 +2,13 @@
 
 Notes on what I understand, what I don't yet, and what changed — in that order, as I go.
 
+> **Scope note (2026-10-10).** The entries dated before 2026-09-19 were
+> written for the 830 MHz cellular design, including the references to a phone
+> and an aircraft. That design is simulation only, not validated on hardware,
+> and deferred. The project scope changed on 2026-09-19 to a receive-only
+> 2.4 GHz viewfinder; see [decisions.md](decisions.md). The entries are kept
+> as written.
+
 ## 2026-09-16
 
 ## 2026-09-17

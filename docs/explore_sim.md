@@ -1,5 +1,12 @@
 # explore_sim.py — a walkthrough you can play with
 
+> **Scope note (2026-10-10).** This walkthrough simulates the 830 MHz cellular
+> pseudo-Doppler design from September 2026, including the "phone" it refers
+> to. That design is simulation only, not validated on hardware, and deferred.
+> The project scope changed on 2026-09-19 to a receive-only 2.4 GHz
+> viewfinder; see [decisions.md](decisions.md). The text below is kept as
+> written.
+
 `explore_sim.py` is not part of the product and not part of the test suite. It's a learning tool. It takes one imaginary phone at a bearing you choose, pushes one burst of its signal through every stage of the direction-finding pipeline, and prints what it sees at each step in plain English.
 
 It uses the real code — the same `estimate_bearing()` the product uses — so what you see is what the system actually does, just slowed down and narrated.

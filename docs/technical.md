@@ -1,5 +1,13 @@
 # bearing_df — pseudo-Doppler direction finding core
 
+> **Scope note (2026-10-10).** This document describes the 830 MHz cellular
+> pseudo-Doppler design from September 2026. That design is simulation only,
+> not validated on hardware, and deferred. The project scope changed on
+> 2026-09-19 to a receive-only 2.4 GHz viewfinder; see
+> [decisions.md](decisions.md). The Opera Cake is not ordered. Every figure
+> below is simulator output, not a measurement. The text below is kept as
+> written, except that the pytest case count was corrected from 32 to 39.
+
 Python package for the HackRF Pro + Opera Cake 4-element switched array.
 Everything here runs and is tested **without hardware** against a simulator
 that produces what the HackRF will see. When the radio arrives, the same
@@ -17,7 +25,7 @@ code runs on recorded `.iq` files and then live.
 | `geo.py` | wedge map: pings from a moving platform accumulate on a grid, peak = fix | done, tested |
 | `hackrf_io.py` | read/write hackrf_transfer files, capture, Opera Cake time-mode setup | flags verified against 2026.01.3 host-tools source; **switch timing and Pro behaviour unverified until hardware** |
 | `cli.py` | `sim`, `file`, `calibrate`, `drive` commands | done |
-| `tests/` | 32 pytest cases | passing |
+| `tests/` | 39 pytest cases | passing |
 
 ## Simulation results (2 MSPS, f_rot = 8 kHz, 3.5 in plate @ 830 MHz)
 

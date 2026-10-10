@@ -1,5 +1,15 @@
 # Hardware day checklist — HackRF Pro + Opera Cake
 
+> **Scope note (2026-10-10).** This checklist was written for the Opera Cake
+> bring-up of the 830 MHz cellular design. It is not the Phase 0 procedure.
+> The Opera Cake is not ordered and enters at Phase 2. Phase 0 runs on a
+> laptop, not the Pi, with one dipole; its method is in
+> [reports/phase0-report.md](reports/phase0-report.md) and its connector notes
+> are in [hardware/connector-notes.md](hardware/connector-notes.md). The 830 MHz
+> design is simulation only, not validated on hardware, and deferred; see
+> [decisions.md](decisions.md). No step below has been run. The text is kept
+> as written.
+
 Pi setup: on a fresh Pi 5 (64-bit Pi OS), `bash tools/setup_pi.sh` installs
 the 2026.01.3 host tools, the udev rule, this repo and its venv, then runs
 the smoke test below. Safe to re-run.

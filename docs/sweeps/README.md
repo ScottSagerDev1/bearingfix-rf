@@ -1,5 +1,12 @@
 # Parameter sweeps: where the pipeline breaks, and why
 
+> **Scope note (2026-10-10).** These sweeps are simulator output for the
+> 830 MHz cellular pseudo-Doppler design from September 2026. That design is
+> simulation only, not validated on hardware, and deferred. The project scope
+> changed on 2026-09-19 to a receive-only 2.4 GHz viewfinder; see
+> [../decisions.md](../decisions.md). No sweep has been run with a Wi-Fi-like
+> 2.4 GHz source. The text below is kept as written.
+
 Generated 2026-09-17 with `python tools/sweep.py` (50 trials × 8 bearings per
 point, ~14 min on 16 cores; the SNR sweep was rerun the same day after
 `DFConfig` moved to physical units — see section 4). Exact numbers are in
