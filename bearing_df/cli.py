@@ -99,11 +99,11 @@ def cmd_calibrate(a):
 def cmd_drive(a):
     """Simulated truck run past a target: pings -> wedges -> fix."""
     rng = np.random.default_rng(a.seed)
-    tlat, tlon = 39.72, -84.10
-    wm = WedgeMap((39.66, -84.20), size_m=30_000, cell_m=150)
+    tlat, tlon = 39.72, -100.00
+    wm = WedgeMap((39.66, -100.10), size_m=30_000, cell_m=150)
     tr = Tracker(window_s=60)
     for i in range(a.n):
-        lat, lon, hdg = 39.65, -84.26 + 0.004 * i, 90.0
+        lat, lon, hdg = 39.65, -100.16 + 0.004 * i, 90.0
         rel = (bearing_between(lat, lon, tlat, tlon) - hdg) % 360
         p = Ping(t=3.0 * i, bearing_deg=rel + rng.normal(0, a.sigma), sigma_deg=a.sigma,
                  strength_db=-90 + 0.3 * i, lat=lat, lon=lon, heading_deg=hdg)

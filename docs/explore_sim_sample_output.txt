@@ -35,4 +35,4 @@ plate 3.5 in = 0.25 wavelengths at 830 MHz; dwell 62.5 samples per element, 3200
      10      276.3           270.1 +- 38.8
      11      266.9           261.3 +- 20.4
 
-   FIX 39.7342, -84.1001: 1578 m from the phone, 50% spread 5063 m, from 12 wedges
+   FIX 39.7342, -100.0001: 1578 m from the phone, 50% spread 5063 m, from 12 wedges

@@ -154,11 +154,11 @@ print(f"   mean |error| per burst {np.mean(np.abs(per_burst)):.1f}  ->  fused {s
 # bearing, as wide as the fused uncertainty. Wedges from different positions
 # cross where the phone is; the pile-up is the fix. A short drive gives
 # nearly parallel wedges and a long smear; passing the phone is what works.
-tlat, tlon = 39.72, -84.10
-wm = WedgeMap((39.66, -84.20), size_m=30_000, cell_m=150)
+tlat, tlon = 39.72, -100.00
+wm = WedgeMap((39.66, -100.10), size_m=30_000, cell_m=150)
 print("6. stop  true rel. bearing  measured")
 for i in range(12):
-    lat, lon, hdg = 39.65, -84.26 + 0.015 * i, 90.0
+    lat, lon, hdg = 39.65, -100.16 + 0.015 * i, 90.0
     rel = (bearing_between(lat, lon, tlat, tlon) - hdg) % 360
     iq_i, _ = simulate(SimConfig(**{**sc_b.__dict__, "bearing_deg": rel, "seed": SEED + 100 + i}), arr)
     tr, st = Tracker(), None

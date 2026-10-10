@@ -143,10 +143,10 @@ def test_tracker_trends():
 
 def test_wedge_fix_from_moving_platform():
     rng = np.random.default_rng(1)
-    tlat, tlon = 39.72, -84.10
-    wm = WedgeMap((39.66, -84.20), size_m=30_000, cell_m=150)
+    tlat, tlon = 39.72, -100.00
+    wm = WedgeMap((39.66, -100.10), size_m=30_000, cell_m=150)
     for i in range(30):
-        lat, lon, hdg = 39.65, -84.26 + 0.004 * i, 90.0
+        lat, lon, hdg = 39.65, -100.16 + 0.004 * i, 90.0
         rel = (bearing_between(lat, lon, tlat, tlon) - hdg) % 360
         p = Ping(t=3 * i, bearing_deg=rel + rng.normal(0, 8), sigma_deg=8, strength_db=-90,
                  lat=lat, lon=lon, heading_deg=hdg)

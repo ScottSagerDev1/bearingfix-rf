@@ -22,8 +22,8 @@ from bearing_df.geo import WedgeMap, Wedge, bearing_between, distance_m, enu_fro
 # explore_sim.py defaults
 TRUE_BEARING_DEG, SNR_DB, BURST_MS, SPACING_IN, SOURCE = 137.0, 3.0, 1.0, 3.5, "wideband"
 FREQ_HZ, FS, F_ROT = 830e6, 2e6, 8000.0
-TLAT, TLON = 39.72, -84.10
-ORIGIN = (39.66, -84.20)
+TLAT, TLON = 39.72, -100.00
+ORIGIN = (39.66, -100.10)
 FAN_KM = 20.0
 
 SERIES, TRUTH, FIX = "#2a78d6", "#1baf7a", "#eb6834"      # validated categorical slots 1, 3, 2
@@ -41,7 +41,7 @@ def drive_by():
     stops = []
     print("6. stop  true rel. bearing  measured")
     for i in range(12):
-        lat, lon, hdg = 39.65, -84.26 + 0.015 * i, 90.0
+        lat, lon, hdg = 39.65, -100.16 + 0.015 * i, 90.0
         rel = (bearing_between(lat, lon, TLAT, TLON) - hdg) % 360
         iq_i, _ = simulate(SimConfig(**{**sc_b.__dict__, "bearing_deg": rel, "seed": 100 + i}), arr)
         tr = Tracker()
