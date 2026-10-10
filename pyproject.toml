@@ -10,6 +10,7 @@ dependencies = ["numpy>=1.24", "scipy>=1.10"]
 
 [project.optional-dependencies]
 sweep = ["matplotlib>=3.7"]
+dev = ["pytest>=7", "ruff>=0.17"]
 
 [tool.setuptools.packages.find]
 include = ["bearing_df*"]
@@ -18,3 +19,9 @@ exclude = ["tests*", "docs*", "tools*"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+
+[tool.ruff.lint]
+# Deliberately narrow: syntax errors and undefined names only. The existing
+# code has not been restyled, so broader rule sets and `ruff format` are not
+# enforced.
+select = ["E9", "F63", "F7", "F82"]
