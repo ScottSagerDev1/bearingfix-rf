@@ -5,3 +5,15 @@ __pycache__/
 *.egg-info/
 CLAUDE.md
 .vscode/
+venv/
+.ruff_cache/
+build/
+dist/
+calibration.json
+
+# Captures: IQ data stays out of git, metadata sidecars are committed.
+# See data/README.md.
+data/**/*.cs8
+*.cfile
+*.sigmf-data
+!data/**/*.sigmf-meta
